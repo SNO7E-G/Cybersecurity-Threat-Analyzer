@@ -1,0 +1,645 @@
+{% extends 'base.html' %}
+
+{% block title %}System Overview - Cybersecurity Threat Analyzer{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h1 class="mb-4">System Overview</h1>
+    
+    <!-- System Status Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">System Health</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-{{ system_status.color }} text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">System Status</h5>
+                                    <p class="card-text fw-bold">{{ system_status.status }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Uptime</h5>
+                                    <p class="card-text fw-bold">{{ system_status.uptime }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">CPU Load</h5>
+                                    <p class="card-text fw-bold">{{ system_status.cpu_load }}%</p>
+                                    <div class="progress">
+                                        <div class="progress-bar {% if system_status.cpu_load > 80 %}bg-danger{% elif system_status.cpu_load > 60 %}bg-warning{% else %}bg-success{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ system_status.cpu_load }}%" 
+                                             aria-valuenow="{{ system_status.cpu_load }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Memory Usage</h5>
+                                    <p class="card-text fw-bold">{{ system_status.memory_usage }}%</p>
+                                    <div class="progress">
+                                        <div class="progress-bar {% if system_status.memory_usage > 80 %}bg-danger{% elif system_status.memory_usage > 60 %}bg-warning{% else %}bg-success{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ system_status.memory_usage }}%" 
+                                             aria-valuenow="{{ system_status.memory_usage }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Component Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Core Components</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Component</th>
+                                    <th>Status</th>
+                                    <th>Version</th>
+                                    <th>Last Updated</th>
+                                    <th>Health</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for component in core_components %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="{{ component.icon }} me-2"></i>
+                                            <strong>{{ component.name }}</strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if component.status == 'active' %}bg-success{% elif component.status == 'warning' %}bg-warning text-dark{% elif component.status == 'error' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ component.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ component.version }}</td>
+                                    <td>{{ component.last_updated }}</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar {% if component.health > 80 %}bg-success{% elif component.health > 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ component.health }}%" 
+                                                 aria-valuenow="{{ component.health }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">{{ component.health }}%</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Plugins -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Installed Plugins</h5>
+                    <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#installPluginModal">
+                        <i class="fas fa-plus"></i> Install Plugin
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Plugin</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Version</th>
+                                    <th>Author</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for plugin in plugins %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-puzzle-piece me-2"></i>
+                                            <div>
+                                                <strong>{{ plugin.name }}</strong>
+                                                <div class="small text-muted">{{ plugin.description }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ plugin.type }}</td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input plugin-toggle" 
+                                                   type="checkbox" 
+                                                   id="plugin-{{ plugin.id }}" 
+                                                   data-plugin-id="{{ plugin.id }}" 
+                                                   {% if plugin.status == 'active' %}checked{% endif %}>
+                                            <label class="form-check-label" for="plugin-{{ plugin.id }}">
+                                                {{ plugin.status }}
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>{{ plugin.version }}</td>
+                                    <td>{{ plugin.author }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary plugin-settings" data-plugin-id="{{ plugin.id }}">
+                                                <i class="fas fa-cog"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-info plugin-info" data-plugin-id="{{ plugin.id }}">
+                                                <i class="fas fa-info-circle"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Architecture Diagram -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">System Architecture</h5>
+                </div>
+                <div class="card-body">
+                    <div class="architecture-diagram">
+                        <div class="arch-layer presentation-layer">
+                            <div class="arch-title">Presentation Layer</div>
+                            <div class="arch-components">
+                                <div class="arch-component">
+                                    <i class="fas fa-desktop"></i>
+                                    <span>Web Dashboard</span>
+                                </div>
+                                <div class="arch-component">
+                                    <i class="fas fa-mobile-alt"></i>
+                                    <span>Mobile App</span>
+                                </div>
+                                <div class="arch-component">
+                                    <i class="fas fa-network-wired"></i>
+                                    <span>API Gateway</span>
+                                </div>
+                                <div class="arch-component">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <span>Reports</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="arch-connector"></div>
+                        <div class="arch-layer integration-layer">
+                            <div class="arch-title">Integration Layer</div>
+                            <div class="arch-components">
+                                <div class="arch-component {% if component_status.integration == 'active' %}component-active{% elif component_status.integration == 'warning' %}component-warning{% elif component_status.integration == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-cogs"></i>
+                                    <span>System Integration</span>
+                                </div>
+                                <div class="arch-component {% if component_status.auth == 'active' %}component-active{% elif component_status.auth == 'warning' %}component-warning{% elif component_status.auth == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-lock"></i>
+                                    <span>Authentication</span>
+                                </div>
+                                <div class="arch-component {% if component_status.event_bus == 'active' %}component-active{% elif component_status.event_bus == 'warning' %}component-warning{% elif component_status.event_bus == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-random"></i>
+                                    <span>Event Bus</span>
+                                </div>
+                                <div class="arch-component {% if component_status.plugin_system == 'active' %}component-active{% elif component_status.plugin_system == 'warning' %}component-warning{% elif component_status.plugin_system == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-puzzle-piece"></i>
+                                    <span>Plugin System</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="arch-connector"></div>
+                        <div class="arch-layer core-layer">
+                            <div class="arch-title">Core Layer</div>
+                            <div class="arch-components">
+                                <div class="arch-component {% if component_status.crypto_security == 'active' %}component-active{% elif component_status.crypto_security == 'warning' %}component-warning{% elif component_status.crypto_security == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Crypto Security</span>
+                                </div>
+                                <div class="arch-component {% if component_status.device_support == 'active' %}component-active{% elif component_status.device_support == 'warning' %}component-warning{% elif component_status.device_support == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-laptop"></i>
+                                    <span>Device Support</span>
+                                </div>
+                                <div class="arch-component {% if component_status.threat_hunting == 'active' %}component-active{% elif component_status.threat_hunting == 'warning' %}component-warning{% elif component_status.threat_hunting == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-search"></i>
+                                    <span>Threat Hunting</span>
+                                </div>
+                                <div class="arch-component {% if component_status.network_monitor == 'active' %}component-active{% elif component_status.network_monitor == 'warning' %}component-warning{% elif component_status.network_monitor == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-wifi"></i>
+                                    <span>Network Monitor</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="arch-connector"></div>
+                        <div class="arch-layer detection-layer">
+                            <div class="arch-title">Detection Layer</div>
+                            <div class="arch-components">
+                                <div class="arch-component {% if component_status.signature_detection == 'active' %}component-active{% elif component_status.signature_detection == 'warning' %}component-warning{% elif component_status.signature_detection == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-fingerprint"></i>
+                                    <span>Signature Detection</span>
+                                </div>
+                                <div class="arch-component {% if component_status.behavioral_analysis == 'active' %}component-active{% elif component_status.behavioral_analysis == 'warning' %}component-warning{% elif component_status.behavioral_analysis == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Behavioral Analysis</span>
+                                </div>
+                                <div class="arch-component {% if component_status.ml_algorithms == 'active' %}component-active{% elif component_status.ml_algorithms == 'warning' %}component-warning{% elif component_status.ml_algorithms == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-brain"></i>
+                                    <span>ML Algorithms</span>
+                                </div>
+                                <div class="arch-component {% if component_status.anomaly_detection == 'active' %}component-active{% elif component_status.anomaly_detection == 'warning' %}component-warning{% elif component_status.anomaly_detection == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span>Anomaly Detection</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="arch-connector"></div>
+                        <div class="arch-layer data-layer">
+                            <div class="arch-title">Data Layer</div>
+                            <div class="arch-components">
+                                <div class="arch-component {% if component_status.time_series_db == 'active' %}component-active{% elif component_status.time_series_db == 'warning' %}component-warning{% elif component_status.time_series_db == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-database"></i>
+                                    <span>Time-Series DB</span>
+                                </div>
+                                <div class="arch-component {% if component_status.document_store == 'active' %}component-active{% elif component_status.document_store == 'warning' %}component-warning{% elif component_status.document_store == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-file-alt"></i>
+                                    <span>Document Store</span>
+                                </div>
+                                <div class="arch-component {% if component_status.relational_db == 'active' %}component-active{% elif component_status.relational_db == 'warning' %}component-warning{% elif component_status.relational_db == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-table"></i>
+                                    <span>Relational DB</span>
+                                </div>
+                                <div class="arch-component {% if component_status.encrypted_storage == 'active' %}component-active{% elif component_status.encrypted_storage == 'warning' %}component-warning{% elif component_status.encrypted_storage == 'error' %}component-error{% endif %}">
+                                    <i class="fas fa-lock"></i>
+                                    <span>Encrypted Storage</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Activity -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">System Activity Log</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Component</th>
+                                    <th>Level</th>
+                                    <th>Message</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in system_logs %}
+                                <tr>
+                                    <td>{{ log.timestamp }}</td>
+                                    <td>{{ log.component }}</td>
+                                    <td>
+                                        <span class="badge {% if log.level == 'ERROR' %}bg-danger{% elif log.level == 'WARNING' %}bg-warning text-dark{% elif log.level == 'INFO' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
+                                            {{ log.level }}
+                                        </span>
+                                    </td>
+                                    <td>{{ log.message }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer text-end">
+                    <button class="btn btn-sm btn-primary">View All Logs</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Install Plugin Modal -->
+<div class="modal fade" id="installPluginModal" tabindex="-1" aria-labelledby="installPluginModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="installPluginModalLabel">Install New Plugin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="installPluginForm">
+                    <div class="mb-3">
+                        <label for="pluginSource" class="form-label">Plugin Source</label>
+                        <select class="form-select" id="pluginSource">
+                            <option value="repository">Official Repository</option>
+                            <option value="file">Upload File</option>
+                            <option value="git">Git Repository</option>
+                        </select>
+                    </div>
+                    
+                    <div id="repositorySourceInputs">
+                        <div class="mb-3">
+                            <label for="pluginName" class="form-label">Plugin Name</label>
+                            <select class="form-select" id="pluginName">
+                                <option value="">-- Select Plugin --</option>
+                                <option value="advanced_malware_detector">Advanced Malware Detector</option>
+                                <option value="network_traffic_analyzer">Network Traffic Analyzer</option>
+                                <option value="iot_security_monitor">IoT Security Monitor</option>
+                                <option value="threat_intelligence_feed">Threat Intelligence Feed</option>
+                                <option value="vulnerability_scanner">Vulnerability Scanner</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pluginVersion" class="form-label">Version</label>
+                            <select class="form-select" id="pluginVersion">
+                                <option value="latest">Latest</option>
+                                <option value="1.0.0">1.0.0</option>
+                                <option value="0.9.0">0.9.0</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="fileSourceInputs" style="display: none;">
+                        <div class="mb-3">
+                            <label for="pluginFile" class="form-label">Plugin File (.zip)</label>
+                            <input class="form-control" type="file" id="pluginFile">
+                        </div>
+                    </div>
+                    
+                    <div id="gitSourceInputs" style="display: none;">
+                        <div class="mb-3">
+                            <label for="gitUrl" class="form-label">Git Repository URL</label>
+                            <input type="text" class="form-control" id="gitUrl" placeholder="https://github.com/username/plugin-repo.git">
+                        </div>
+                        <div class="mb-3">
+                            <label for="gitBranch" class="form-label">Branch</label>
+                            <input type="text" class="form-control" id="gitBranch" placeholder="main" value="main">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="installPluginBtn">Install</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Architecture Diagram Styles */
+    .architecture-diagram {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
+    }
+    
+    .arch-layer {
+        width: 100%;
+        background-color: #f8f8f8;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .arch-title {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #333;
+        font-size: 1.1rem;
+    }
+    
+    .arch-components {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .arch-component {
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 120px;
+        text-align: center;
+        transition: all 0.3s;
+    }
+    
+    .arch-component i {
+        font-size: 24px;
+        margin-bottom: 8px;
+        color: #6c757d;
+    }
+    
+    .arch-component span {
+        font-size: 0.9rem;
+    }
+    
+    .arch-connector {
+        height: 30px;
+        width: 2px;
+        background-color: #dee2e6;
+        position: relative;
+    }
+    
+    .arch-connector:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: -4px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #dee2e6;
+    }
+    
+    .component-active {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+    
+    .component-active i {
+        color: #28a745;
+    }
+    
+    .component-warning {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    }
+    
+    .component-warning i {
+        color: #ffc107;
+    }
+    
+    .component-error {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    
+    .component-error i {
+        color: #dc3545;
+    }
+    
+    /* Layer color coding */
+    .presentation-layer {
+        background-color: #e6f7ff;
+    }
+    
+    .integration-layer {
+        background-color: #e6ffe6;
+    }
+    
+    .core-layer {
+        background-color: #fff0e6;
+    }
+    
+    .detection-layer {
+        background-color: #f7e6ff;
+    }
+    
+    .data-layer {
+        background-color: #ffe6e6;
+    }
+    
+    /* Plugin toggle switch styling */
+    .form-switch .form-check-input:checked {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+    
+    /* System health indicators */
+    .card .progress {
+        height: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Plugin source type toggle
+        const pluginSource = document.getElementById('pluginSource');
+        const repositoryInputs = document.getElementById('repositorySourceInputs');
+        const fileInputs = document.getElementById('fileSourceInputs');
+        const gitInputs = document.getElementById('gitSourceInputs');
+        
+        pluginSource.addEventListener('change', function() {
+            repositoryInputs.style.display = 'none';
+            fileInputs.style.display = 'none';
+            gitInputs.style.display = 'none';
+            
+            if (this.value === 'repository') {
+                repositoryInputs.style.display = 'block';
+            } else if (this.value === 'file') {
+                fileInputs.style.display = 'block';
+            } else if (this.value === 'git') {
+                gitInputs.style.display = 'block';
+            }
+        });
+        
+        // Plugin toggle switches
+        const pluginToggles = document.querySelectorAll('.plugin-toggle');
+        pluginToggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const pluginId = this.dataset.pluginId;
+                const enabled = this.checked;
+                
+                // In a real implementation, this would make an AJAX call to enable/disable the plugin
+                const label = this.nextElementSibling;
+                label.textContent = enabled ? 'active' : 'inactive';
+                
+                console.log(`Plugin ${pluginId} ${enabled ? 'enabled' : 'disabled'}`);
+            });
+        });
+        
+        // Install plugin button
+        document.getElementById('installPluginBtn').addEventListener('click', function() {
+            const source = document.getElementById('pluginSource').value;
+            
+            let pluginInfo = {};
+            if (source === 'repository') {
+                pluginInfo = {
+                    name: document.getElementById('pluginName').value,
+                    version: document.getElementById('pluginVersion').value
+                };
+            } else if (source === 'file') {
+                const fileInput = document.getElementById('pluginFile');
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    alert('Please select a file');
+                    return;
+                }
+                pluginInfo = {
+                    file: fileInput.files[0].name
+                };
+            } else if (source === 'git') {
+                pluginInfo = {
+                    gitUrl: document.getElementById('gitUrl').value,
+                    branch: document.getElementById('gitBranch').value
+                };
+            }
+            
+            console.log('Installing plugin:', source, pluginInfo);
+            
+            // In a real implementation, this would make an AJAX call to install the plugin
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('installPluginModal'));
+            modal.hide();
+            
+            // Show success message
+            alert('Plugin installation started. This may take a few minutes.');
+        });
+    });
+</script>
+{% endblock %} 

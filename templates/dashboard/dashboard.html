@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Cybersecurity Threat Analyzer{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h1 class="mb-4">Dashboard</h1>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Network Scans</h6>
+                            <h2 class="mb-0">{{ scan_count }}</h2>
+                        </div>
+                        <i class="fas fa-network-wired fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a href="{% url 'network_scans' %}" class="text-white text-decoration-none">View Details</a>
+                    <i class="fas fa-angle-right"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Packets Captured</h6>
+                            <h2 class="mb-0">{{ packet_count }}</h2>
+                        </div>
+                        <i class="fas fa-exchange-alt fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a href="{% url 'packets' %}" class="text-white text-decoration-none">View Details</a>
+                    <i class="fas fa-angle-right"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Threats Detected</h6>
+                            <h2 class="mb-0">{{ threat_count }}</h2>
+                        </div>
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a href="{% url 'threats' %}" class="text-white text-decoration-none">View Details</a>
+                    <i class="fas fa-angle-right"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Alerts</h6>
+                            <h2 class="mb-0">{{ alert_count }}</h2>
+                        </div>
+                        <i class="fas fa-bell fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a href="{% url 'alerts' %}" class="text-white text-decoration-none">View Details</a>
+                    <i class="fas fa-angle-right"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts and Tables -->
+    <div class="row mb-4">
+        <!-- Threat Severity Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Active Threats by Severity</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="threatSeverityChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Threats -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Recent Threats</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_threats %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Severity</th>
+                                        <th>Status</th>
+                                        <th>Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for threat in recent_threats %}
+                                        <tr>
+                                            <td>{{ threat.threat_type }}</td>
+                                            <td>
+                                                <span class="badge {% if threat.severity == 'critical' %}bg-danger{% elif threat.severity == 'high' %}bg-warning text-dark{% elif threat.severity == 'medium' %}bg-info text-dark{% else %}bg-success{% endif %}">
+                                                    {{ threat.severity }}
+                                                </span>
+                                            </td>
+                                            <td>{{ threat.status }}</td>
+                                            <td>{{ threat.timestamp|date:"M d, H:i" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No threats detected yet.</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'threats' %}" class="btn btn-sm btn-primary">View All Threats</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Recent Alerts -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Active Alerts</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_alerts %}
+                        <div class="list-group">
+                            {% for alert in recent_alerts %}
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ alert.title }}</h6>
+                                        <small>{{ alert.timestamp|date:"M d, H:i" }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ alert.message }}</p>
+                                    <small class="text-muted">
+                                        <span class="badge {% if alert.severity == 'critical' %}bg-danger{% elif alert.severity == 'error' %}bg-warning text-dark{% elif alert.severity == 'warning' %}bg-info text-dark{% else %}bg-success{% endif %}">
+                                            {{ alert.severity }}
+                                        </span>
+                                    </small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No unacknowledged alerts.</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'alerts' %}" class="btn btn-sm btn-primary">View All Alerts</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Scans -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Recent Network Scans</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_scans %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Target</th>
+                                        <th>Status</th>
+                                        <th>Started</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for scan in recent_scans %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'network_scan_detail' scan.id %}">
+                                                    {{ scan.name }}
+                                                </a>
+                                            </td>
+                                            <td>{{ scan.target_network }}</td>
+                                            <td>
+                                                <span class="badge {% if scan.status == 'completed' %}bg-success{% elif scan.status == 'running' %}bg-primary{% elif scan.status == 'failed' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                    {{ scan.status }}
+                                                </span>
+                                            </td>
+                                            <td>{{ scan.start_time|date:"M d, H:i" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No network scans performed yet.</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'network_scans' %}" class="btn btn-sm btn-primary">View All Scans</a>
+                    <button type="button" class="btn btn-sm btn-success float-end" data-bs-toggle="modal" data-bs-target="#newScanModal">
+                        <i class="fas fa-plus"></i> New Scan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Scan Modal -->
+<div class="modal fade" id="newScanModal" tabindex="-1" aria-labelledby="newScanModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{% url 'network_scans' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newScanModalLabel">Start New Network Scan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Scan Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="target_network" class="form-label">Target Network</label>
+                        <input type="text" class="form-control" id="target_network" name="target_network" placeholder="e.g. 192.168.1.0/24" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="interface" class="form-label">Network Interface</label>
+                        <input type="text" class="form-control" id="interface" name="interface" placeholder="e.g. eth0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="filter_str" class="form-label">Packet Filter (BPF Syntax)</label>
+                        <input type="text" class="form-control" id="filter_str" name="filter_str" placeholder="e.g. tcp port 80">
+                    </div>
+                    <div class="mb-3">
+                        <label for="scan_type" class="form-label">Scan Type</label>
+                        <select class="form-select" id="scan_type" name="scan_type" required>
+                            <option value="packet_capture">Packet Capture</option>
+                            <option value="vulnerability_scan">Vulnerability Scan</option>
+                            <option value="port_scan">Port Scan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Start Scan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Severity chart data
+        const severityData = {{ severity_data|safe }};
+        
+        if (severityData.labels.length > 0) {
+            const ctx = document.getElementById('threatSeverityChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: severityData.labels,
+                    datasets: [{
+                        data: severityData.data,
+                        backgroundColor: severityData.colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Active Threats by Severity',
+                            font: {
+                                size: 16
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('threatSeverityChart').innerHTML = 'No threat data available';
+        }
+    });
+</script>
+{% endblock %} 
