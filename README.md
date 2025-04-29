@@ -393,7 +393,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## About the Author
 
-**Mahmoud Ashraf (SNO7E)** is a cybersecurity researcher and developer focusing on advanced threat detection and machine learning applications in security.
+**Mahmoud Ashraf (SNO7E)** is a cybersecurity researcher and developer focusing on advanced threat detection and machine learning applications in security and many other things Of course 😉✌.
 
 GitHub: [@SNO7E-G](https://github.com/SNO7E-G)
 
